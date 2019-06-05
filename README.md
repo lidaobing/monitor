@@ -27,7 +27,7 @@ Value = "uptime | awk '{print $(NF-1)}' | tr -d ','"
 
 [[metrics]]
 Name = "cpu.load15"
-Value = "uptime | awk '{print $(NF-1)}' | tr -d ','"
+Value = "uptime | awk '{print $(NF-0)}' | tr -d ','"
 
 [[metrics]]
 Name = "ping.baidu.ms"
