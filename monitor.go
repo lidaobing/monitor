@@ -14,6 +14,7 @@ import (
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/apis"
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/models"
 	"github.com/jdcloud-api/jdcloud-sdk-go/core"
+	"github.com/BurntSushi/toml"
 )
 
 type config struct {
@@ -109,18 +110,25 @@ func monitor(c *config) {
 }
 
 func main() {
-	c := config{
-		Namespace: "computers",
-		Metrics: []metric{
-			metric{
-				Name: "load1",
-				Value: "uptime | awk '{print $(NF-2)}' | tr -d ','",
-			},
-			metric{
-				Name: "load5",
-				Value: "uptime | awk '{print $(NF-1)}' | tr -d ','",
-			},
-		},
+	var c config
+	_, err := toml.DecodeFile("/home/lidaobing/.lidaobing-monitor.toml", &c)
+	if err != nil {
+		panic(err)
 	}
 	monitor(&c)
+
+
+	// c := config{
+	// 	Namespace: "computers",
+	// 	Metrics: []metric{
+	// 		metric{
+	// 			Name: "load1",
+	// 			Value: "uptime | awk '{print $(NF-2)}' | tr -d ','",
+	// 		},
+	// 		metric{
+	// 			Name: "load5",
+	// 			Value: "uptime | awk '{print $(NF-1)}' | tr -d ','",
+	// 		},
+	// 	},
+	// }
 }
