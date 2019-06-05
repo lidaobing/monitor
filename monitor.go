@@ -18,6 +18,8 @@ import (
 )
 
 type config struct {
+	AK string
+	SK string
 	Namespace string
 	Dimensions map[string]string
 	Metrics []metric
@@ -29,9 +31,7 @@ type metric struct {
 	Value string
 }
 
-func submitData(namespace string, dimensions map[string]string, values map[string]float64) (err error) {
-	ak := os.Getenv("JDCLOUD_AK")
-	sk := os.Getenv("JDCLOUD_SK")
+func submitData(ak, sk, namespace string, dimensions map[string]string, values map[string]float64) (err error) {
 	cr := core.NewCredentials(ak, sk)
 	client := client.NewMonitorClient(cr)
 	client.JDCloudClient.Config.SetEndpoint("monitor.cn-north-1.jdcloud-api.com")
@@ -103,7 +103,7 @@ func monitor(c *config) {
 		values[m.Name] = value
 	}
 
-	err := submitData(c.Namespace, c.Dimensions, values)
+	err := submitData(c.AK, c.SK, c.Namespace, c.Dimensions, values)
 	if err != nil {
 		panic(err)
 	}
@@ -116,19 +116,4 @@ func main() {
 		panic(err)
 	}
 	monitor(&c)
-
-
-	// c := config{
-	// 	Namespace: "computers",
-	// 	Metrics: []metric{
-	// 		metric{
-	// 			Name: "load1",
-	// 			Value: "uptime | awk '{print $(NF-2)}' | tr -d ','",
-	// 		},
-	// 		metric{
-	// 			Name: "load5",
-	// 			Value: "uptime | awk '{print $(NF-1)}' | tr -d ','",
-	// 		},
-	// 	},
-	// }
 }
