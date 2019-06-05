@@ -47,3 +47,7 @@ Value = "sar -n DEV | grep wlp3s0 | tail -2 | head -1 | awk '{print $7}'"
 ```crontab
 * * * * * $HOME/go/bin/monitor > /dev/null
 ```
+
+### view the result
+
+view the result in [jdcloud](https://cms-console.jdcloud.com/overviewCustom).
