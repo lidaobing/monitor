@@ -4,12 +4,29 @@ import (
 	"os"
 	"time"
 	"fmt"
+	"bytes"
+	"os/exec"
+	"log"
+	"strconv"
+	"strings"
 
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/client"
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/apis"
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/models"
 	"github.com/jdcloud-api/jdcloud-sdk-go/core"
 )
+
+type config struct {
+	Namespace string
+	Dimensions map[string]string
+	Metrics []metric
+}
+
+type metric struct {
+	Name string
+	Type string
+	Value string
+}
 
 func submitData(namespace string, dimensions map[string]string, values map[string]float64) (err error) {
 	ak := os.Getenv("JDCLOUD_AK")
@@ -52,13 +69,58 @@ func submitData(namespace string, dimensions map[string]string, values map[strin
 	return nil
 }
 
-func monitor() {
-	err := submitData("computers", nil, map[string]float64{"load1-test": 1.0, "load5-test": 2.0})
+func shellOut(command string) (error, string, string) {
+    var stdout bytes.Buffer
+    var stderr bytes.Buffer
+    cmd := exec.Command("bash", "-c", command)
+    cmd.Stdout = &stdout
+    cmd.Stderr = &stderr
+    err := cmd.Run()
+    return err, stdout.String(), stderr.String()
+}
+
+func monitor(c *config) {
+	values := map[string]float64{}
+
+	for _, m := range(c.Metrics) {
+		err, stdout, stderr := shellOut(m.Value)
+		if err != nil {
+			log.Printf("run command `%s' failed:\n  err: %s\n, stdout: %s\n  stderr: %s\n",
+				m.Value,
+				err,
+				stdout,
+				stderr)
+			continue
+		}
+		value, err := strconv.ParseFloat(strings.TrimSpace(stdout), 64)
+		if err != nil {
+			log.Printf("output of command `%s' is not float:\n  stdout: %s\n",
+				m.Value,
+				stdout)
+			continue
+		}
+		values[m.Name] = value
+	}
+
+	err := submitData(c.Namespace, c.Dimensions, values)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func main() {
-	monitor()
+	c := config{
+		Namespace: "computers",
+		Metrics: []metric{
+			metric{
+				Name: "load1",
+				Value: "uptime | awk '{print $(NF-2)}' | tr -d ','",
+			},
+			metric{
+				Name: "load5",
+				Value: "uptime | awk '{print $(NF-1)}' | tr -d ','",
+			},
+		},
+	}
+	monitor(&c)
 }
