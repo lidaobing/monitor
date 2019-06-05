@@ -11,35 +11,52 @@ import (
 	"github.com/jdcloud-api/jdcloud-sdk-go/core"
 )
 
-func monitor() {
+func submitData(namespace string, dimensions map[string]string, values map[string]float64) (err error) {
 	ak := os.Getenv("JDCLOUD_AK")
 	sk := os.Getenv("JDCLOUD_SK")
 	cr := core.NewCredentials(ak, sk)
 	client := client.NewMonitorClient(cr)
 	client.JDCloudClient.Config.SetEndpoint("monitor.cn-north-1.jdcloud-api.com")
 
-	//unit := "xx"
-
-	a1 := models.MetricDataCm{
-		Namespace: "computers",
-		Metric: "cpu.load12",
-		Dimensions: map[string]string{"host": "lidaobing-T470"},
-		Timestamp: time.Now().Unix(),
-		Type: 1,
-		Values: map[string]string{"value": "xxx"},
-		//Unit: &unit,
+	if dimensions == nil {
+		hostname, err := os.Hostname()
+		if err != nil {
+			return err
+		}
+		dimensions = map[string]string{"host": hostname}
 	}
 
-	req := apis.NewPutMetricDataRequestWithAllParams([]models.MetricDataCm{a1})
+	data := []models.MetricDataCm{}
+	now := time.Now().Unix()
+
+	for k, v := range values {
+		data = append(data, models.MetricDataCm{
+			Namespace: namespace,
+			Metric: k,
+			Dimensions: dimensions,
+			Timestamp: now,
+			Type: 1,
+			Values: map[string]string{"value": fmt.Sprintf("%f", v)},
+		})
+	}
+
+	req := apis.NewPutMetricDataRequestWithAllParams(data)
 
 	res, err := client.PutMetricData(req)
 
 	if err != nil {
-		fmt.Println("error happend")
-		panic(err)
+		return err
 	}
 
 	fmt.Println(res)
+	return nil
+}
+
+func monitor() {
+	err := submitData("computers", nil, map[string]float64{"load1-test": 1.0, "load5-test": 2.0})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
