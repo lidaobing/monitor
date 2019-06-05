@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"os/user"
 	"time"
 	"fmt"
 	"bytes"
@@ -9,6 +10,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"path"
 
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/client"
 	"github.com/jdcloud-api/jdcloud-sdk-go/services/monitor/apis"
@@ -111,7 +113,13 @@ func monitor(c *config) {
 
 func main() {
 	var c config
-	_, err := toml.DecodeFile("/home/lidaobing/.lidaobing-monitor.toml", &c)
+
+	u, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = toml.DecodeFile(path.Join(u.HomeDir, ".lidaobing-monitor.toml"), &c)
 	if err != nil {
 		panic(err)
 	}

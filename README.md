@@ -31,7 +31,7 @@ Value = "uptime | awk '{print $(NF-1)}' | tr -d ','"
 
 [[metrics]]
 Name = "ping.baidu.ms"
-Value = "ping -c 1 do1.lidaobing.com  | head -2 | tail -1 | sed -e 's/^.*time=\\(.*\\) ms/\\1/g'"
+Value = "ping -c 1 www.baidu.com  | head -2 | tail -1 | sed -e 's/^.*time=\\(.*\\) ms/\\1/g'"
 
 [[metrics]]
 Name = "rx.kB"
